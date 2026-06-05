@@ -271,15 +271,92 @@ async def suspend(ctx, member: discord.Member, *, reason="No reason"):
 # ================= SERVER INFO =================
 @bot.command(aliases=["si"])
 async def serverinfo(ctx):
-    g = ctx.guild
+    guild = ctx.guild
 
-    emb = discord.Embed(title=g.name, color=0x5865f2)
-    emb.add_field(name="Members", value=g.member_count)
-    emb.add_field(name="Roles", value=len(g.roles))
-    emb.set_thumbnail(url=g.icon.url if g.icon else None)
+    humans = len([m for m in guild.members if not m.bot])
+    bots = len([m for m in guild.members if m.bot])
 
-    await ctx.send(embed=emb)
+    embed = discord.Embed(
+        title=f"{guild.name}",
+        color=0x5865F2
+    )
 
+    if guild.icon:
+        embed.set_thumbnail(url=guild.icon.url)
+
+    embed.add_field(
+        name="Owner",
+        value=guild.owner.mention if guild.owner else "Unknown",
+        inline=True
+    )
+
+    embed.add_field(
+        name="Created",
+        value=f"<t:{int(guild.created_at.timestamp())}:D>",
+        inline=True
+    )
+
+    embed.add_field(
+        name="Server ID",
+        value=guild.id,
+        inline=False
+    )
+
+    embed.add_field(
+        name="Members",
+        value=f"{guild.member_count}",
+        inline=True
+    )
+
+    embed.add_field(
+        name="Humans",
+        value=humans,
+        inline=True
+    )
+
+    embed.add_field(
+        name="Bots",
+        value=bots,
+        inline=True
+    )
+
+    embed.add_field(
+        name="Roles",
+        value=len(guild.roles),
+        inline=True
+    )
+
+    embed.add_field(
+        name="Channels",
+        value=len(guild.channels),
+        inline=True
+    )
+
+    embed.add_field(
+        name="Boosts",
+        value=guild.premium_subscription_count,
+        inline=True
+    )
+
+    embed.add_field(
+        name="Boost Tier",
+        value=guild.premium_tier,
+        inline=True
+    )
+
+    embed.add_field(
+        name="Emojis",
+        value=len(guild.emojis),
+        inline=True
+    )
+
+    embed.add_field(
+        name="Verification",
+        value=str(guild.verification_level).title(),
+        inline=True
+    )
+
+    await ctx.send(embed=embed)
 
 # ================= RUN =================
 bot.run(os.getenv("TOKEN"))
