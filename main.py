@@ -18,4 +18,5 @@ async def setup_hook():
 async def on_ready():
     print(f"Logged in as {bot.user}")
 
-bot.run("TOKEN")
+import os
+print(os.getenv("TOKEN"))
