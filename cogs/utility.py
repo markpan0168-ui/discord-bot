@@ -1,4 +1,3 @@
-python
 import discord
 import re
 from datetime import timedelta
