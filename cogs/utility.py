@@ -1,4 +1,4 @@
-```python
+python
 import discord
 import re
 from datetime import timedelta
@@ -341,5 +341,4 @@ class Utility(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))
-```
 
