@@ -1,97 +1,91 @@
+import discord
 from discord.ext import commands
+import time
 
-# ================= AFK =================
-@bot.command()
-async def afk(ctx, *, reason="AFK"):
+from cogs.utility import embed
 
-    afk_users[ctx.author.id] = reason
+afk_users = {}
+afk_cooldowns = {}
 
-    try:
-        nick = ctx.author.display_name
+class AFK(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-if not nick.startswith("[AFK] "):
-    await ctx.author.edit(nick=f"[AFK] {nick}")
-    except:
-        pass
+    @commands.command()
+    async def afk(self, ctx, *, reason="AFK"):
 
-    await ctx.send(
-        embed=embed(
-            "AFK Enabled",
-            f"{ctx.author.mention} is now AFK.\nReason: {reason}",
-            0xffff00
-        )
-    )
+        afk_users[ctx.author.id] = reason
 
+        try:
+            nick = ctx.author.display_name
 
-@bot.event
-async def on_message(message):
+            if not nick.startswith("[AFK] "):
+                await ctx.author.edit(nick=f"[AFK] {nick}")
 
-    if message.author.bot:
-        return
+        except Exception:
+            pass
 
-    # AFK RETURN
-    if message.author.id in afk_users:
-
-        reason = afk_users.pop(message.author.id)
-
-        now = time.time()
-
-        if afk_cooldowns.get(message.author.id, 0) <= now:
-
-            afk_cooldowns[message.author.id] = now + 5
-
-            try:
-                await message.author.edit(
-                    nick=message.author.display_name.replace("[AFK] ", "")
-                )
-            except:
-                pass
-
-            await message.channel.send(
-                embed=embed(
-                    "Welcome Back",
-                    f"{message.author.mention} is no longer AFK.\nPrevious reason: {reason}",
-                    0x00ff88
-                )
+        await ctx.send(
+            embed=embed(
+                "AFK Enabled",
+                f"{ctx.author.mention} is now AFK.\nReason: {reason}",
+                0xffff00
             )
+        )
 
-    # AFK MENTION CHECK
-    for user in message.mentions:
+    @commands.Cog.listener()
+    async def on_message(self, message):
 
-        if user.bot:
-            continue
+        if message.author.bot:
+            return
 
-        if user.id in afk_users:
+        # User returns from AFK
+        if message.author.id in afk_users:
 
+            reason = afk_users.pop(message.author.id)
+
+            now = time.time()
+
+            if afk_cooldowns.get(message.author.id, 0) <= now:
+
+                afk_cooldowns[message.author.id] = now + 5
+
+                try:
+                    await message.author.edit(
+                        nick=message.author.display_name.replace("[AFK] ", "")
+                    )
+                except Exception:
+                    pass
+
+                await message.channel.send(
+                    embed=embed(
+                        "Welcome Back",
+                        f"{message.author.mention} is no longer AFK.\nPrevious reason: {reason}",
+                        0x00ff88
+                    )
+                )
+
+        # Check mentioned AFK users
+        afk_list = []
+
+        for user in message.mentions:
+
+            if user.bot:
+                continue
+
+            if user.id in afk_users:
+                afk_list.append(
+                    f"{user.mention} - {afk_users[user.id]}"
+                )
+
+        if afk_list:
             await message.channel.send(
                 embed=embed(
-                    "User AFK",
-                    f"{user.mention} is AFK.\nReason: {afk_users[user.id]}",
+                    "AFK Users",
+                    "\n".join(afk_list),
                     0xffcc00
                 )
             )
 
-    await bot.process_commands(message)
-
-afk_list = []
-
-for user in message.mentions:
-    if user.bot:
-        continue
-
-    if user.id in afk_users:
-        afk_list.append(
-            f"{user.mention} - {afk_users[user.id]}"
-        )
-
-if afk_list:
-    await message.channel.send(
-        embed=embed(
-            "AFK Users",
-            "\n".join(afk_list),
-            0xffcc00
-        )
-    )
-
-# stores user roles before suspension
-suspend_cache = {}
+async def setup(bot):
+    await bot.add_cog(AFK(bot))

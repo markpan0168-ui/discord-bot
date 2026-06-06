@@ -1,4 +1,6 @@
-from discord.ext import commands
+# config.py
+
+suspend_cache = {}
 
 # ================= CONFIG =================
 MOD_ROLE_ID = 1502932574769643550
@@ -7,9 +9,3 @@ ADMIN_ROLE_ID = 1488474035997380649
 SUSPENDED_ROLE_ID = 1500473776725295134
 SUSPENDED_CHANNEL_ID = 1501202781766422641
 APPEAL_CHANNEL_ID = 1488471572011290654
-
-from config import MOD_ROLE_ID
-from config import ADMIN_ROLE_ID
-from config import SUSPENDED_ROLE_ID
-from config import SUSPENDED_CHANNEL_ID
-from config import APPEAL_CHANNEL_ID

@@ -1,4 +1,5 @@
 from discord.ext import commands
+from config import suspend_cache
 
 # ================= MOD STATS =================
 @bot.command(aliases=["moderationstatistics"])
