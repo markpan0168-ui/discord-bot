@@ -11,6 +11,7 @@ import re
 import aiosqlite
 import asyncio
 import time
+import random
 
 # ================= INTENTS =================
 intents = discord.Intents.all()
@@ -41,6 +42,7 @@ async def setup_db():
             unmutes INTEGER DEFAULT 0,
             bans INTEGER DEFAULT 0,
             suspensions INTEGER DEFAULT 0
+            unsuspensions INTEGER DEFAULT 0
         )
         """)
 
@@ -51,6 +53,7 @@ async def setup_db():
             mutes INTEGER DEFAULT 0,
             bans INTEGER DEFAULT 0,
             suspensions INTEGER DEFAULT 0
+            unsuspensions INTEGER DEFAULT 0
         )
         """)
 
@@ -441,47 +444,6 @@ async def embed_builder(
                 ephemeral=True
             )
 
-    await interaction.response.send_message(embed=emb)
-@bot.command(aliases=["si"])
-async def serverinfo(ctx):
-    guild = ctx.guild
-
-    humans = len([m for m in guild.members if not m.bot])
-    bots = len([m for m in guild.members if m.bot])
-
-    emb = discord.Embed(
-        title=guild.name,
-        color=0x5865F2
-    )
-
-    if guild.icon:
-        emb.set_thumbnail(url=guild.icon.url)
-
-    emb.add_field(name="Owner", value=guild.owner.mention if guild.owner else "Unknown", inline=True)
-    emb.add_field(name="Created", value=f"<t:{int(guild.created_at.timestamp())}:D>", inline=True)
-    emb.add_field(name="Server ID", value=guild.id, inline=False)
-
-    emb.add_field(name="Members", value=guild.member_count, inline=True)
-    emb.add_field(name="Humans", value=humans, inline=True)
-    emb.add_field(name="Bots", value=bots, inline=True)
-
-    emb.add_field(name="Roles", value=len(guild.roles), inline=True)
-    emb.add_field(name="Channels", value=len(guild.channels), inline=True)
-
-    emb.add_field(name="Boosts", value=guild.premium_subscription_count, inline=True)
-    emb.add_field(name="Boost Tier", value=guild.premium_tier, inline=True)
-
-    emb.add_field(name="Emojis", value=len(guild.emojis), inline=True)
-    emb.add_field(name="Verification", value=str(guild.verification_level).title(), inline=True)
-
-    await ctx.send(embed=emb)
-
-
-@bot.command()
-@commands.has_role(ADMIN_ROLE_ID)
-async def suspend(ctx, member: discord.Member, *, reason="No reason"):
-
-suspend_cache[member.id] = [r.id for r in member.roles if r != ctx.guild.default_role]
 
     # remove all roles except @everyone
     for role in member.roles:
@@ -615,12 +577,6 @@ async def modstats_slash(
 
     await interaction.response.send_message(embed=emb)
 
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        await ctx.send("❌ You don't have permission.")
-
-
 @tree.error
 async def on_app_command_error(interaction, error):
     if isinstance(error, app_commands.MissingRole):
@@ -643,6 +599,15 @@ async def on_command_error(ctx, error):
         return await ctx.send("❌ You don't have permission.")
 
     if isinstance(error, commands.MissingRequiredArgument):
+        return await ctx.send(
+            embed=usage_embed(
+                f",{ctx.command}",
+                f",{ctx.command} <args>",
+                "Missing required arguments."
+            )
+        )
+
+    raise error
 
         cmd = ctx.command.name
 
@@ -1000,33 +965,6 @@ async def modstats_slash(
 
     await interaction.response.send_message(embed=emb)
 
-@bot.event
-async def on_command_error(ctx, error):
-
-    if isinstance(error, commands.MissingRole):
-        return await ctx.send("❌ You don't have permission.")
-
-    if isinstance(error, commands.MissingRequiredArgument):
-
-        cmd = ctx.command.name
-
-        if cmd == "warn":
-            return await ctx.send(embed=usage_embed(",warn", ",warn @user [reason]", "Warn a user."))
-
-        elif cmd == "mute":
-            return await ctx.send(embed=usage_embed(",mute", ",mute @user <duration> [reason]", "Mute a user."))
-
-        elif cmd == "ban":
-            return await ctx.send(embed=usage_embed(",ban", ",ban @user [reason]", "Ban a user."))
-
-        elif cmd == "suspend":
-            return await ctx.send(embed=usage_embed(",suspend", ",suspend @user [reason]", "Suspend a user."))
-
-        elif cmd == "unmute":
-            return await ctx.send(embed=usage_embed(",unmute", ",unmute @user [reason]", "Unmute a user."))
-
-    raise error
-
 
 @tree.error
 async def on_app_command_error(interaction, error):
@@ -1072,10 +1010,13 @@ async def on_command_error(ctx, error):
             )
 
         elif cmd == "ban":
-            return await ctx.send(
-                embed=usage_embed(
-                    ",ban",
-                    "suspend":
+    return await ctx.send(
+        embed=usage_embed(
+            ",ban",
+            ",ban @user [reason]",
+            "Ban a user."
+        )
+    )
             return await ctx.send(
                 embed=usage_embed(
                     ",suspend",
