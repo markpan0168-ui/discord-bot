@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 def parse_duration(duration: str):
     match = re.match(r"(\d+)(s|m|h|d)", duration)
     if not match:

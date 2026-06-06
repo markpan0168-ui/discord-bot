@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 # ================= CONFIG =================
 MOD_ROLE_ID = 1502932574769643550
 ADMIN_ROLE_ID = 1488474035997380649

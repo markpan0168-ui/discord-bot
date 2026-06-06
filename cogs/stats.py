@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 # ================= MOD STATS =================
 @bot.command(aliases=["moderationstatistics"])
 @commands.has_role(MOD_ROLE_ID)

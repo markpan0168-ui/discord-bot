@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 # ================= AFK =================
 @bot.command()
 async def afk(ctx, *, reason="AFK"):

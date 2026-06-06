@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 # ================= POOLS =================
 
 truth_bloxfruit = [
