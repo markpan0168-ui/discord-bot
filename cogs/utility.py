@@ -6,7 +6,7 @@ from datetime import timedelta
 from discord.ext import commands
 from discord import app_commands
 
-from config import MOD_ROLE_ID, suspend_cache
+from cogs.config import MOD_ROLE_ID, suspend_cache
 
 
 # ================= HELPERS =================

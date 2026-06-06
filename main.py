@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import os
 
-from config import *
+from cogs.config import *
 from cogs.utility import usage_embed
 
 # if you already moved suspend_cache here later, you're good

@@ -1,10 +1,10 @@
-from config import *
+from cogs.config import *
 from cogs.utility import embed, usage_embed, parse_duration, suspend_cache
 from cogs.stats import add_stat, add_mod_stat
 from discord.ext import commands
 import discord
 from discord import app_commands
-from config import suspend_cache
+from cogs.config import suspend_cache
 
 # assumes these exist somewhere global or imported
 # MOD_ROLE_ID, ADMIN_ROLE_ID, SUSPENDED_ROLE_ID, SUSPENDED_CHANNEL_ID, APPEAL_CHANNEL_ID
