@@ -1,3 +1,4 @@
+print("BOOTING BOT FILE")
 import discord
 from discord.ext import commands
 
@@ -19,4 +20,5 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
 
 import os
-print(os.getenv("TOKEN"))
+
+bot.run(os.getenv("TOKEN"))
