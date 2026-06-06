@@ -1,6 +1,6 @@
 from cogs.config import *
 from cogs.utility import embed, usage_embed, parse_duration, suspend_cache
-from cogs.stats import add_stat, add_mod_stat
+from cogs.db import add_stat, add_mod_stat
 from discord.ext import commands
 import discord
 from discord import app_commands

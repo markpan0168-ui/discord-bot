@@ -117,28 +117,6 @@ class Stats(commands.Cog):
 
             await db.commit()
 
-    # ================= HELPERS =================
-    async def add_mod_stat(self, mod_id, column):
-        async with aiosqlite.connect("mod.db") as db:
-            await db.execute(f"""
-                INSERT INTO modstats (moderator_id, {column})
-                VALUES (?, 1)
-                ON CONFLICT(moderator_id)
-                DO UPDATE SET {column} = {column} + 1
-            """, (mod_id,))
-            await db.commit()
-
-    async def add_stat(self, user_id, column):
-        async with aiosqlite.connect("mod.db") as db:
-            await db.execute(f"""
-                INSERT INTO stats (user_id, {column})
-                VALUES (?, 1)
-                ON CONFLICT(user_id)
-                DO UPDATE SET {column} = {column} + 1
-            """, (user_id,))
-            await db.commit()
-
-
 async def setup(bot):
     cog = Stats(bot)
     await bot.add_cog(cog)
