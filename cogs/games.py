@@ -80,7 +80,7 @@ dare_general = [
 
 class TDView(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=None)
+        super().__init__(timeout=None)  # REQUIRED for persistence
 
     def get_random(self):
         return random.choice(
@@ -93,7 +93,11 @@ class TDView(discord.ui.View):
     def get_dare(self):
         return random.choice(dare_bloxfruit + dare_general)
 
-    @discord.ui.button(label="Truth", style=discord.ButtonStyle.primary)
+    @discord.ui.button(
+        label="Truth",
+        style=discord.ButtonStyle.primary,
+        custom_id="td_truth"
+    )
     async def truth_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message(
             embed=discord.Embed(
@@ -104,7 +108,11 @@ class TDView(discord.ui.View):
             ephemeral=True
         )
 
-    @discord.ui.button(label="Dare", style=discord.ButtonStyle.danger)
+    @discord.ui.button(
+        label="Dare",
+        style=discord.ButtonStyle.danger,
+        custom_id="td_dare"
+    )
     async def dare_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message(
             embed=discord.Embed(
@@ -115,24 +123,27 @@ class TDView(discord.ui.View):
             ephemeral=True
         )
 
-    @discord.ui.button(label="Random", style=discord.ButtonStyle.success)
+    @discord.ui.button(
+        label="Random",
+        style=discord.ButtonStyle.success,
+        custom_id="td_random"
+    )
     async def random_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        result = self.get_random()
-
         await interaction.response.send_message(
             embed=discord.Embed(
                 title="Random Challenge",
-                description=result,
+                description=self.get_random(),
                 color=0xf1c40f
             ),
             ephemeral=True
         )
 
-# ================= COMMAND =================
+# ================= COG =================
 
 class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.add_view(TDView())  # persistent registration belongs here
 
     @commands.command()
     async def truthdare(self, ctx):
@@ -147,3 +158,6 @@ class Games(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Games(bot))
+
+# IMPORTANT (somewhere in your bot startup)
+# bot.add_view(TDView())

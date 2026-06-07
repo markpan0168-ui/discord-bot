@@ -4,7 +4,6 @@ import os
 
 from cogs.config import *
 from cogs.utility import usage_embed
-from cogs.games import TDView
 
 print("BOOTING BOT FILE")
 
@@ -21,7 +20,7 @@ class MyBot(commands.Bot):
         await self.load_extension("cogs.stats")
 
         # Persistent button views
-        self.add_view(TDView())
+       
 
         # Sync slash commands
         try:
