@@ -3,28 +3,39 @@ import re
 from datetime import timedelta
 from discord.ext import commands
 from discord import app_commands
-from cogs.config import *
-from cogs.stats import setup_db
-from cogs.config import MOD_ROLE_ID, suspend_cache
+
+from cogs.config import MOD_ROLE_ID
 
 
 # ================= HELPERS =================
 
 def parse_duration(duration: str):
-    match = re.match(r"(\d+)(s|m|h|d)", duration)
+    """
+    Supports:
+    10s, 10m, 2h, 1d
+    also expanded human formats:
+    10sec, 10min, 2hours, 1day
+    """
+
+    duration = duration.lower().strip()
+
+    match = re.match(r"(\d+)\s*(s|m|h|d|sec|min|hour|hours|day|days)?", duration)
     if not match:
         return None
 
     value = int(match.group(1))
     unit = match.group(2)
 
-    if unit == "s":
+    if not unit:
+        return None
+
+    if unit in ("s", "sec"):
         return timedelta(seconds=value)
-    if unit == "m":
+    if unit in ("m", "min"):
         return timedelta(minutes=value)
-    if unit == "h":
+    if unit in ("h", "hour", "hours"):
         return timedelta(hours=value)
-    if unit == "d":
+    if unit in ("d", "day", "days"):
         return timedelta(days=value)
 
     return None
@@ -65,17 +76,17 @@ class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # ---------- Slash Server Info ----------
+    # ---------- SLASH SERVER INFO ----------
 
-    @app_commands.command(
-        name="serverinfo",
-        description="Show server information"
-    )
-    async def serverinfo_slash(
-        self,
-        interaction: discord.Interaction
-    ):
+    @app_commands.command(name="serverinfo", description="Show server information")
+    async def serverinfo_slash(self, interaction: discord.Interaction):
+
         guild = interaction.guild
+        if guild is None:
+            return await interaction.response.send_message(
+                "This command only works in servers.",
+                ephemeral=True
+            )
 
         humans = len([m for m in guild.members if not m.bot])
         bots = len([m for m in guild.members if m.bot])
@@ -88,87 +99,29 @@ class Utility(commands.Cog):
         if guild.icon:
             emb.set_thumbnail(url=guild.icon.url)
 
-        emb.add_field(
-            name="Owner",
-            value=guild.owner.mention if guild.owner else "Unknown",
-            inline=True
-        )
+        emb.add_field(name="Owner", value=guild.owner.mention if guild.owner else "Unknown", inline=True)
+        emb.add_field(name="Created", value=f"<t:{int(guild.created_at.timestamp())}:D>", inline=True)
+        emb.add_field(name="Server ID", value=str(guild.id), inline=False)
 
-        emb.add_field(
-            name="Created",
-            value=f"<t:{int(guild.created_at.timestamp())}:D>",
-            inline=True
-        )
+        emb.add_field(name="Members", value=guild.member_count, inline=True)
+        emb.add_field(name="Humans", value=humans, inline=True)
+        emb.add_field(name="Bots", value=bots, inline=True)
 
-        emb.add_field(
-            name="Server ID",
-            value=guild.id,
-            inline=False
-        )
+        emb.add_field(name="Roles", value=len(guild.roles), inline=True)
+        emb.add_field(name="Channels", value=len(guild.channels), inline=True)
 
-        emb.add_field(
-            name="Members",
-            value=guild.member_count,
-            inline=True
-        )
+        emb.add_field(name="Boosts", value=guild.premium_subscription_count, inline=True)
+        emb.add_field(name="Boost Tier", value=guild.premium_tier, inline=True)
 
-        emb.add_field(
-            name="Humans",
-            value=humans,
-            inline=True
-        )
-
-        emb.add_field(
-            name="Bots",
-            value=bots,
-            inline=True
-        )
-
-        emb.add_field(
-            name="Roles",
-            value=len(guild.roles),
-            inline=True
-        )
-
-        emb.add_field(
-            name="Channels",
-            value=len(guild.channels),
-            inline=True
-        )
-
-        emb.add_field(
-            name="Boosts",
-            value=guild.premium_subscription_count,
-            inline=True
-        )
-
-        emb.add_field(
-            name="Boost Tier",
-            value=guild.premium_tier,
-            inline=True
-        )
-
-        emb.add_field(
-            name="Emojis",
-            value=len(guild.emojis),
-            inline=True
-        )
-
-        emb.add_field(
-            name="Verification",
-            value=str(guild.verification_level).title(),
-            inline=True
-        )
+        emb.add_field(name="Emojis", value=len(guild.emojis), inline=True)
+        emb.add_field(name="Verification", value=str(guild.verification_level).title(), inline=True)
 
         await interaction.response.send_message(embed=emb)
 
-    # ---------- Slash Embed Builder ----------
+    # ---------- EMBED BUILDER ----------
 
     @app_commands.checks.has_role(MOD_ROLE_ID)
-    @app_commands.command(
-        name="embed",
-        description="Create a custom embed"
-    )
+    @app_commands.command(name="embed", description="Create a custom embed")
     async def embed_builder(
         self,
         interaction: discord.Interaction,
@@ -182,11 +135,8 @@ class Utility(commands.Cog):
     ):
 
         try:
-            color_int = int(
-                color.replace("#", ""),
-                16
-            )
-        except:
+            color_int = int(color.replace("#", ""), 16)
+        except Exception:
             return await interaction.response.send_message(
                 "Invalid color format. Use #ff0000",
                 ephemeral=True
@@ -209,26 +159,20 @@ class Utility(commands.Cog):
 
         if message_link:
             try:
-                match = re.search(
-                    r"discord\.com/channels/(\d+)/(\d+)/(\d+)",
-                    message_link
-                )
+                match = re.search(r"discord\.com/channels/(\d+)/(\d+)/(\d+)", message_link)
 
                 if match:
                     channel_id = int(match.group(2))
                     message_id = int(match.group(3))
 
                     channel = self.bot.get_channel(channel_id)
-
                     if channel is None:
                         channel = await self.bot.fetch_channel(channel_id)
 
                     msg = await channel.fetch_message(message_id)
 
                     if msg.attachments:
-                        emb.set_image(
-                            url=msg.attachments[0].url
-                        )
+                        emb.set_image(url=msg.attachments[0].url)
 
             except Exception as e:
                 return await interaction.response.send_message(
@@ -236,18 +180,16 @@ class Utility(commands.Cog):
                     ephemeral=True
                 )
 
-        await interaction.response.send_message(
-            embed=emb
-        )
+        await interaction.response.send_message(embed=emb)
 
-    # ---------- Prefix Server Info ----------
+    # ---------- PREFIX SERVER INFO ----------
 
     @commands.command(aliases=["si"])
-    async def serverinfo(
-        self,
-        ctx
-    ):
+    async def serverinfo(self, ctx):
+
         guild = ctx.guild
+        if guild is None:
+            return await ctx.send("This command only works in servers.")
 
         humans = len([m for m in guild.members if not m.bot])
         bots = len([m for m in guild.members if m.bot])
@@ -258,85 +200,27 @@ class Utility(commands.Cog):
         )
 
         if guild.icon:
-            emb.set_thumbnail(
-                url=guild.icon.url
-            )
+            emb.set_thumbnail(url=guild.icon.url)
 
-        emb.add_field(
-            name="Owner",
-            value=guild.owner.mention if guild.owner else "Unknown",
-            inline=True
-        )
+        emb.add_field(name="Owner", value=guild.owner.mention if guild.owner else "Unknown", inline=True)
+        emb.add_field(name="Created", value=f"<t:{int(guild.created_at.timestamp())}:D>", inline=True)
+        emb.add_field(name="Server ID", value=str(guild.id), inline=False)
 
-        emb.add_field(
-            name="Created",
-            value=f"<t:{int(guild.created_at.timestamp())}:D>",
-            inline=True
-        )
+        emb.add_field(name="Members", value=guild.member_count, inline=True)
+        emb.add_field(name="Humans", value=humans, inline=True)
+        emb.add_field(name="Bots", value=bots, inline=True)
 
-        emb.add_field(
-            name="Server ID",
-            value=guild.id,
-            inline=False
-        )
+        emb.add_field(name="Roles", value=len(guild.roles), inline=True)
+        emb.add_field(name="Channels", value=len(guild.channels), inline=True)
 
-        emb.add_field(
-            name="Members",
-            value=guild.member_count,
-            inline=True
-        )
+        emb.add_field(name="Boosts", value=guild.premium_subscription_count, inline=True)
+        emb.add_field(name="Boost Tier", value=guild.premium_tier, inline=True)
 
-        emb.add_field(
-            name="Humans",
-            value=humans,
-            inline=True
-        )
-
-        emb.add_field(
-            name="Bots",
-            value=bots,
-            inline=True
-        )
-
-        emb.add_field(
-            name="Roles",
-            value=len(guild.roles),
-            inline=True
-        )
-
-        emb.add_field(
-            name="Channels",
-            value=len(guild.channels),
-            inline=True
-        )
-
-        emb.add_field(
-            name="Boosts",
-            value=guild.premium_subscription_count,
-            inline=True
-        )
-
-        emb.add_field(
-            name="Boost Tier",
-            value=guild.premium_tier,
-            inline=True
-        )
-
-        emb.add_field(
-            name="Emojis",
-            value=len(guild.emojis),
-            inline=True
-        )
-
-        emb.add_field(
-            name="Verification",
-            value=str(guild.verification_level).title(),
-            inline=True
-        )
+        emb.add_field(name="Emojis", value=len(guild.emojis), inline=True)
+        emb.add_field(name="Verification", value=str(guild.verification_level).title(), inline=True)
 
         await ctx.send(embed=emb)
 
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))
-

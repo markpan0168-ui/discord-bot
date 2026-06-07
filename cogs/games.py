@@ -2,6 +2,7 @@ import random
 import discord
 from discord.ext import commands
 
+
 # ================= POOLS =================
 
 truth_bloxfruit = [
@@ -37,25 +38,25 @@ truth_general = [
     "Have you ever sent a risky text?",
     "Have you ever liked someone who didn’t like you back?",
     "What’s a secret you would never tell your parents?",
-    "Have you ever kissed someone? (if no, who would you want to?)"
+    "Have you ever kissed someone?"
 ]
 
 dare_bloxfruit = [
-    "Go into PvP and fight someone using only sword",
+    "Go into PvP and fight using only sword",
     "Drop your current fruit if someone is nearby",
-    "Spin a random fruit and must use it for 10 minutes",
+    "Spin a random fruit and use it for 10 minutes",
     "Let someone else choose your build",
-    "Go to sea 2 and help a random player",
-    "Use a weak fruit in PvP and try to win",
+    "Go help a random player",
+    "Use a weak fruit in PvP",
     "Join a raid and don’t use abilities",
-    "Give away 1 rare item if you lose a fight",
+    "Give away a rare item if you lose a fight",
     "Use only basic attacks for 5 minutes",
-    "Let someone else control your movement for 1 minute",
-    "Go farm with no accessories",
+    "Let someone control your movement for 1 minute",
+    "Farm with no accessories",
     "Switch to random fighting style",
-    "Help a beginner grind for 10 minutes",
-    "Let your enemy hit you first in PvP",
-    "Stand still in a PvP zone for 30 seconds"
+    "Help a beginner grind",
+    "Let enemy hit you first",
+    "Stand still in PvP zone for 30 seconds"
 ]
 
 dare_general = [
@@ -65,27 +66,23 @@ dare_general = [
     "Type your last search in chat",
     "Compliment the next person who messages you",
     "Send 'I like you' to a random friend",
-    "Change your nickname to something funny for 10 mins",
+    "Change your nickname for 10 mins",
     "Spam a random emoji 10 times",
     "React to every message for 5 minutes",
     "Say something smooth in chat",
     "Confess a fake crush in chat",
-    "Send a voice note saying hi (if possible)",
+    "Send a voice note saying hi",
     "Type your most embarrassing thought",
-    "Say something cheesy like you're in a romance movie",
-    "Flirt lightly with someone in chat (no explicit content)"
+    "Say something cheesy like romance movie dialogue",
+    "Flirt lightly (keep it safe)"
 ]
+
 
 # ================= VIEW =================
 
 class TDView(discord.ui.View):
     def __init__(self):
-        super().__init__(timeout=None)  # REQUIRED for persistence
-
-    def get_random(self):
-        return random.choice(
-            truth_bloxfruit + truth_general + dare_bloxfruit + dare_general
-        )
+        super().__init__(timeout=None)
 
     def get_truth(self):
         return random.choice(truth_bloxfruit + truth_general)
@@ -93,63 +90,58 @@ class TDView(discord.ui.View):
     def get_dare(self):
         return random.choice(dare_bloxfruit + dare_general)
 
-    @discord.ui.button(
-        label="Truth",
-        style=discord.ButtonStyle.primary,
-        custom_id="td_truth"
-    )
+    def get_random(self):
+        return random.choice(
+            truth_bloxfruit + truth_general + dare_bloxfruit + dare_general
+        )
+
+    async def send_result(self, interaction, title, desc, color):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title=title,
+                description=desc,
+                color=color
+            ),
+            ephemeral=False  # PUBLIC NOW
+        )
+
+    @discord.ui.button(label="Truth", style=discord.ButtonStyle.primary, custom_id="td_truth")
     async def truth_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="Truth",
-                description=self.get_truth(),
-                color=0x00ffcc
-            ),
-            ephemeral=True
-        )
+        await self.send_result(interaction, "Truth", self.get_truth(), 0x00ffcc)
 
-    @discord.ui.button(
-        label="Dare",
-        style=discord.ButtonStyle.danger,
-        custom_id="td_dare"
-    )
+    @discord.ui.button(label="Dare", style=discord.ButtonStyle.danger, custom_id="td_dare")
     async def dare_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="Dare",
-                description=self.get_dare(),
-                color=0xff4444
-            ),
-            ephemeral=True
-        )
+        await self.send_result(interaction, "Dare", self.get_dare(), 0xff4444)
 
-    @discord.ui.button(
-        label="Random",
-        style=discord.ButtonStyle.success,
-        custom_id="td_random"
-    )
+    @discord.ui.button(label="Random", style=discord.ButtonStyle.success, custom_id="td_random")
     async def random_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="Random Challenge",
-                description=self.get_random(),
-                color=0xf1c40f
-            ),
-            ephemeral=True
-        )
+        await self.send_result(interaction, "Random Challenge", self.get_random(), 0xf1c40f)
+
 
 # ================= COG =================
 
 class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.add_view(TDView())  # persistent registration belongs here
+        self.bot.add_view(TDView())
 
-    @commands.command()
-    async def truthdare(self, ctx):
+    # PREFIX COMMAND
+    @commands.command(name="tod")
+    async def tod_prefix(self, ctx):
         embed = discord.Embed(
             title="🎮 Truth or Dare",
-            description="Press a button to get your challenge.",
+            description="Click a button to get a challenge.",
+            color=0x2b2d31
+        )
+
+        await ctx.send(embed=embed, view=TDView())
+
+    # SLASH COMMAND
+    @commands.hybrid_command(name="tod", description="Truth or Dare game")
+    async def tod_slash(self, ctx: commands.Context):
+        embed = discord.Embed(
+            title="🎮 Truth or Dare",
+            description="Click a button to get a challenge.",
             color=0x2b2d31
         )
 
@@ -158,6 +150,3 @@ class Games(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Games(bot))
-
-# IMPORTANT (somewhere in your bot startup)
-# bot.add_view(TDView())
