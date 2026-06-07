@@ -2,7 +2,7 @@ import discord
 import aiosqlite
 from discord.ext import commands
 from discord import app_commands
-from cogd.config import MOD_ROLE_ID
+from cogs.config import MOD_ROLE_ID
 from cogs.config import *
 
 class Stats(commands.Cog):
