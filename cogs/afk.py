@@ -3,6 +3,8 @@ from discord.ext import commands
 import time
 
 from cogs.utility import embed
+from cogs.config import *
+from cogs.db import setup_db
 
 afk_users = {}
 afk_cooldowns = {}

@@ -1,25 +1,25 @@
-from discord.ext import commands
 import discord
 import aiosqlite
+from discord.ext import commands
 from discord import app_commands
-
-from cogs.config import MOD_ROLE_ID  # adjust if your config path differs
-
+from cogs.db import setup_db
+from cogd.config import MOD_ROLE_ID
+from cogs.config import *
 
 class Stats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # ================= MOD STATS (PREFIX) =================
+    # ================= MOD STATS PREFIX =================
     @commands.command(aliases=["moderationstatistics"])
     @commands.has_role(MOD_ROLE_ID)
     async def ms(self, ctx, moderator: discord.Member):
 
         async with aiosqlite.connect("mod.db") as db:
             async with db.execute("""
-                SELECT warns, mutes, unmutes, bans, suspensions
-                FROM modstats
-                WHERE moderator_id = ?
+            SELECT warns, mutes, unmutes, bans, suspensions
+            FROM modstats
+            WHERE moderator_id = ?
             """, (moderator.id,)) as cursor:
                 data = await cursor.fetchone()
 
@@ -49,16 +49,16 @@ class Stats(commands.Cog):
 
         await ctx.send(embed=emb)
 
-    # ================= MOD STATS (SLASH) =================
+    # ================= SLASH =================
     @app_commands.command(name="modstats", description="View moderator statistics")
     @app_commands.checks.has_role(MOD_ROLE_ID)
     async def modstats_slash(self, interaction: discord.Interaction, moderator: discord.Member):
 
         async with aiosqlite.connect("mod.db") as db:
             async with db.execute("""
-                SELECT warns, mutes, unmutes, bans, suspensions
-                FROM modstats
-                WHERE moderator_id = ?
+            SELECT warns, mutes, unmutes, bans, suspensions
+            FROM modstats
+            WHERE moderator_id = ?
             """, (moderator.id,)) as cursor:
                 data = await cursor.fetchone()
 
@@ -89,34 +89,56 @@ class Stats(commands.Cog):
 
         await interaction.response.send_message(embed=emb)
 
-    # ================= DATABASE =================
-    async def setup_db(self):
-        async with aiosqlite.connect("mod.db") as db:
-            await db.execute("""
-                CREATE TABLE IF NOT EXISTS modstats (
-                    moderator_id INTEGER PRIMARY KEY,
-                    warns INTEGER DEFAULT 0,
-                    mutes INTEGER DEFAULT 0,
-                    unmutes INTEGER DEFAULT 0,
-                    bans INTEGER DEFAULT 0,
-                    suspensions INTEGER DEFAULT 0,
-                    unsuspensions INTEGER DEFAULT 0
-                )
-            """)
 
-            await db.execute("""
-                CREATE TABLE IF NOT EXISTS stats (
-                    user_id INTEGER PRIMARY KEY,
-                    warns INTEGER DEFAULT 0,
-                    mutes INTEGER DEFAULT 0,
-                    bans INTEGER DEFAULT 0,
-                    suspensions INTEGER DEFAULT 0,
-                    unsuspensions INTEGER DEFAULT 0
-                )
-            """)
+# ================= DB + FUNCTIONS =================
+async def setup_db():
+    async with aiosqlite.connect("mod.db") as db:
+        await db.execute("""
+        CREATE TABLE IF NOT EXISTS modstats (
+            moderator_id INTEGER PRIMARY KEY,
+            warns INTEGER DEFAULT 0,
+            mutes INTEGER DEFAULT 0,
+            unmutes INTEGER DEFAULT 0,
+            bans INTEGER DEFAULT 0,
+            suspensions INTEGER DEFAULT 0,
+            unsuspensions INTEGER DEFAULT 0
+        )
+        """)
 
-            await db.commit()
+        await db.execute("""
+        CREATE TABLE IF NOT EXISTS stats (
+            user_id INTEGER PRIMARY KEY,
+            warns INTEGER DEFAULT 0,
+            mutes INTEGER DEFAULT 0,
+            bans INTEGER DEFAULT 0,
+            suspensions INTEGER DEFAULT 0,
+            unsuspensions INTEGER DEFAULT 0
+        )
+        """)
+
+        await db.commit()
+
+
+async def add_mod_stat(mod_id, column):
+    async with aiosqlite.connect("mod.db") as db:
+        await db.execute(f"""
+        INSERT INTO modstats (moderator_id, {column})
+        VALUES (?, 1)
+        ON CONFLICT(moderator_id)
+        DO UPDATE SET {column} = {column} + 1
+        """, (mod_id,))
+        await db.commit()
+
+
+async def add_stat(user_id, column):
+    async with aiosqlite.connect("mod.db") as db:
+        await db.execute(f"""
+        INSERT INTO stats (user_id, {column})
+        VALUES (?, 1)
+        ON CONFLICT(user_id)
+        DO UPDATE SET {column} = {column} + 1
+        """, (user_id,))
+        await db.commit()
 
 async def setup(bot):
-    cog = Stats(bot)
-    await bot.add_cog(cog)
+    await bot.add_cog(Stats(bot))

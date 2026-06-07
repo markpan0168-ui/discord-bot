@@ -1,3 +1,5 @@
+import random
+import discord
 from discord.ext import commands
 
 # ================= POOLS =================
@@ -128,12 +130,20 @@ class TDView(discord.ui.View):
 
 # ================= COMMAND =================
 
-@bot.command()
-async def truthdare(ctx):
-    embed = discord.Embed(
-        title="🎮 Truth or Dare",
-        description="Press a button to get your challenge.",
-        color=0x2b2d31
-    )
+class Games(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-    await ctx.send(embed=embed, view=TDView())
+    @commands.command()
+    async def truthdare(self, ctx):
+        embed = discord.Embed(
+            title="🎮 Truth or Dare",
+            description="Press a button to get your challenge.",
+            color=0x2b2d31
+        )
+
+        await ctx.send(embed=embed, view=TDView())
+
+
+async def setup(bot):
+    await bot.add_cog(Games(bot))
