@@ -102,7 +102,7 @@ class TDView(discord.ui.View):
                 description=desc,
                 color=color
             ),
-            ephemeral=False  # PUBLIC NOW
+            ephemeral=False
         )
 
     @discord.ui.button(label="Truth", style=discord.ButtonStyle.primary, custom_id="td_truth")
@@ -125,20 +125,9 @@ class Games(commands.Cog):
         self.bot = bot
         self.bot.add_view(TDView())
 
-    # PREFIX COMMAND
-    @commands.command(name="tod")
-    async def tod_prefix(self, ctx):
-        embed = discord.Embed(
-            title="🎮 Truth or Dare",
-            description="Click a button to get a challenge.",
-            color=0x2b2d31
-        )
-
-        await ctx.send(embed=embed, view=TDView())
-
-    # SLASH COMMAND
+    # ONLY ONE COMMAND (FIXED DUPLICATE ISSUE)
     @commands.hybrid_command(name="tod", description="Truth or Dare game")
-    async def tod_slash(self, ctx: commands.Context):
+    async def tod(self, ctx: commands.Context):
         embed = discord.Embed(
             title="🎮 Truth or Dare",
             description="Click a button to get a challenge.",
