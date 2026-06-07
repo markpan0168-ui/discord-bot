@@ -2,7 +2,6 @@ import discord
 import aiosqlite
 from discord.ext import commands
 from discord import app_commands
-from cogs.db import setup_db
 from cogd.config import MOD_ROLE_ID
 from cogs.config import *
 
