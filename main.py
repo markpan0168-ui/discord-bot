@@ -4,22 +4,26 @@ import os
 
 from cogs.config import *
 from cogs.utility import usage_embed
-
-# if you already moved suspend_cache here later, you're good
+from cogs.games import TDView
 
 print("BOOTING BOT FILE")
 
 intents = discord.Intents.all()
 
+
 class MyBot(commands.Bot):
     async def setup_hook(self):
+
         await self.load_extension("cogs.moderation")
         await self.load_extension("cogs.afk")
         await self.load_extension("cogs.utility")
         await self.load_extension("cogs.games")
         await self.load_extension("cogs.stats")
 
-        # sync slash commands here (cleaner than on_ready spam)
+        # Persistent button views
+        self.add_view(TDView())
+
+        # Sync slash commands
         try:
             synced = await self.tree.sync()
             print(f"Synced {len(synced)} slash commands")
@@ -27,7 +31,10 @@ class MyBot(commands.Bot):
             print(f"Slash sync failed: {e}")
 
 
-bot = MyBot(command_prefix=",", intents=intents)
+bot = MyBot(
+    command_prefix=",",
+    intents=intents
+)
 
 
 @bot.event
@@ -80,7 +87,6 @@ async def on_command_error(ctx, error):
             ))
 
     print(error)
-    return
 
 
 token = os.getenv("TOKEN")

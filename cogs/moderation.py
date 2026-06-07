@@ -6,7 +6,7 @@ from discord.ext import commands
 import discord
 from discord import app_commands
 from cogs.config import suspend_cache
-from cogs.db import setup_db
+from cogs.stats import setup_db
 
 # assumes these exist somewhere global or imported
 # MOD_ROLE_ID, ADMIN_ROLE_ID, SUSPENDED_ROLE_ID, SUSPENDED_CHANNEL_ID, APPEAL_CHANNEL_ID
