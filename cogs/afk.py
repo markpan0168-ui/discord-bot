@@ -4,7 +4,7 @@ import time
 
 from cogs.utility import embed
 from cogs.config import *
-from cogs.db import setup_db
+from cogs.stats import setup_db
 
 afk_users = {}
 afk_cooldowns = {}
