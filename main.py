@@ -18,6 +18,7 @@ class MyBot(commands.Bot):
         await self.load_extension("cogs.utility")
         await self.load_extension("cogs.games")
         await self.load_extension("cogs.stats")
+        await self.load_extension("cogs.servicestats")
 
         # Persistent button views
        
